@@ -165,7 +165,7 @@ with col_score:
     st.info(f"💡 **臨床建議**\n\n{risk_advice}")
 
 with col_chart:
-    st.subheader("📈 累積肝細胞癌 (HCC) 發生風險曲線")
+    st.subheader("📈 肝細胞癌 (HCC) 累積發生風險率")
     
     fig = go.Figure()
     # 發生率曲線
