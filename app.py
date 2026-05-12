@@ -43,11 +43,11 @@ st.set_page_config(
 # --- 1. 頁面配置後立即加入法律聲明 ---
 st.error("⚠️ **學術研究專用聲明**：本工具僅供合作醫師及研究人員作為學術參考，**嚴禁**直接用於臨床診斷或醫療決策。使用前請務必核對原始研究論文。")
 
-with st.expander("📖 原始研究與模型來源"):
+with st.expander("原始研究與模型來源"):
     st.write("""
     **研究題目**：Risk Factors and Nomogram Model for Hepatocellular Carcinoma Development in Chronic Hepatitis B Patients with Low-Level Viremia
     **作者**：Chen, Y.C. et al.
-    **發表期刊**：nternational Journal of Medical Sciences 21.9 (2024): 1661
+    **發表期刊**：International Journal of Medical Sciences 21.9 (2024): 1661
     **連結**：[點此查看論文原文](https://www.medsci.org/v21p1661.htm)
     """)
 
