@@ -73,21 +73,28 @@ st.markdown("""
 
 # --- 標題區 ---
 st.title("🧬 慢性B型肝炎低病毒血症患者發生肝細胞癌(HCC)風險評分系統")
-st.caption("本工具根據慢性B型肝炎低病毒血症患者(HBV DNA 檢測結果在 20 至 2000 IU/mL之間)研究建立，提供精確的風險評分與動態生存曲線預測。")
+st.caption("本工具根據慢性B型肝炎低病毒血症患者(HBV DNA 檢測結果在 20 至 2000 IU/mL之間)研究建立。")
 
 # --- 側邊欄：重新設計外觀 ---
 with st.sidebar:
     st.header("📍 患者臨床指標")
-    st.info("請輸入以下參數以獲取即時評估報告")
     
     gender = st.radio("性別 (Gender)", options=["男 (Male)", "女 (Female)"], horizontal=True)
-    age = st.slider("年齡 (Age)", 20, 90, 55)
     
-    st.divider() # 加入分隔線
+    age = st.slider("年齡 (Age)", 20, 90, 55, 
+                    help="本模型針對 20 歲以上成年患者開發。")
     
-    cirrhosis = st.segmented_control("肝硬化 (Cirrhosis)", options=["無 (No)", "有 (Yes)"], default="無 (No)")
-    platelet = st.selectbox("血小板計數 (Platelet)", options=["正常 (150~400)", "異常 (<150 or >400)"])
-    ast = st.selectbox("AST 數值", options=["正常 (5~34)", "異常 (Abnormal)"])
+    cirrhosis = st.segmented_control("肝硬化 (Cirrhosis)", options=["無 (No)", "有 (Yes)"], 
+                                     default="無 (No)",
+                                     help="指經由超音波、肝纖維化掃描 (Fibroscan) 或切片確診之肝硬化。")
+    
+    platelet = st.selectbox("血小板計數 (Platelet)", 
+                            options=["正常 (150~400)", "異常 (<150 or >400)"],
+                            help="單位為 10^3/μL。血小板低下通常與肝硬化或門脈高壓相關。")
+    
+    ast = st.selectbox("AST 數值 (GOT)", 
+                       options=["正常 (5~34)", "異常 (Abnormal)"],
+                       help="請參考您就診醫院之標準值，通常以 >34 U/L 為異常上限。")
 
 # --- 核心計算邏輯 ---
 age_factor = (31.95164 * 3.57680) / 80
@@ -113,18 +120,29 @@ else:
     risk_color = "#dc3545" # 紅色
     risk_advice = "強烈建議每 3 個月密切追蹤，並諮詢專科醫師考慮預防性治療。"
 
+# --- 根據風險等級動態設定顯示顏色 ---
+# 只有在高風險時顯示紅色 (#e74c3c)，其餘等級顯示藍色 (#1f77b4)
+display_color = "#e74c3c" if "高風險" in risk_status else "#1f77b4"
+
 # --- 計算生存曲線 ---
 def get_curve(score):
     lp = 0.03166 * (score - 72.641166)
     exponent = math.exp(lp)
     times = [0, 3, 5, 10]
-    base = [1.0, 0.9741862491, 0.963424793, 0.9205781806]
-    pts = [s ** exponent for s in base]
+    # 這是原始的存活率基底 S0(t)
+    base_survival = [1.0, 0.9741862491, 0.963424793, 0.9205781806]
+    
+    # 計算各點的累積發生率 (1 - Survival)
+    pts_incidence = [(1 - (s ** exponent)) for s in base_survival]
+    
     full_t = np.linspace(0, 10, 100)
-    full_s = np.interp(full_t, times, pts)
-    return full_t, full_s, pts
+    # 使用生存率插值後再轉發生率，曲線會較平滑
+    full_s_survival = np.interp(full_t, times, [s ** exponent for s in base_survival])
+    full_i_incidence = 1 - full_s_survival 
+    
+    return full_t, full_i_incidence, pts_incidence
 
-full_t, full_s, key_probs = get_curve(total_points)
+full_t, full_i, key_risks = get_curve(total_points)
 
 # --- 視覺結果呈現區 ---
 col_score, col_chart = st.columns([1, 2], gap="large")
@@ -147,72 +165,53 @@ with col_score:
     st.info(f"💡 **臨床建議**\n\n{risk_advice}")
 
 with col_chart:
-    st.subheader("📈 生存概率演變曲線")
-
-    # 使用 HTML/CSS 建立一個可橫向滑動的包裝層
-    st.markdown('<div style="overflow-x: auto; white-space: nowrap;">', unsafe_allow_html=True)
-
+    st.subheader("📈 累積肝細胞癌 (HCC) 發生風險曲線")
+    
     fig = go.Figure()
-    # 填充區域
+    # 發生率曲線
     fig.add_trace(go.Scatter(
-        x=full_t, y=full_s, fill='tozeroy', mode='lines',
+        x=full_t, y=full_i, fill='tozeroy', mode='lines',
         line=dict(color=risk_color, width=4),
-        name='HCC-free Probability'
+        name='Cumulative Incidence'
     ))
-
-    # 關鍵切點標記
+    
+    # 修改關鍵點標籤
     fig.add_trace(go.Scatter(
-        x=[3, 5, 10], 
-        y=[key_probs[1], key_probs[2], key_probs[3]],
+        x=[3, 5, 10], y=[key_risks[1], key_risks[2], key_risks[3]],
         mode='markers+text',
-        text=[f"{key_probs[1]:.1%}", f"{key_probs[2]:.1%}", f"{key_probs[3]:.1%}"],
-        textposition="top center",  # 改為正上方，減少右側被切掉的機率
-        textfont=dict(size=20),     # 即使字體很大
+        text=[f"{key_risks[1]:.1%}", f"{key_risks[2]:.1%}", f"{key_risks[3]:.1%}"],
+        textposition="top left",
+        textfont=dict(size=18),
         marker=dict(color='black', size=10, symbol='diamond')
     ))
-
+    
     fig.update_layout(
-        # 增加右側(r)和上方(t)的邊距，留空間給大字體
-        margin=dict(l=50, r=80, b=50, t=50), 
-        template="plotly_white",
-        yaxis=dict(
-            range=[0, 1.1], # 稍微拉高 y 軸上限至 1.1，避免 top 的文字被切掉
-            tickformat=".0%",
-            tickfont=dict(size=14)
-        ),
-        xaxis=dict(
-            range=[0, 11],  # 稍微拉長 x 軸上限至 11，避免 10年的文字被切掉
-            title=dict(text="Years Following Evaluation", font=dict(size=16)),
-            tickfont=dict(size=14),
-            dtick=1
-        ),
-        height=500,
-        showlegend=False
+        yaxis=dict(title="累積發生率 (%)", tickformat=".1%", range=[0, max(full_i)*1.5 if max(full_i)>0 else 0.1]),
+        xaxis=dict(title="評估後追蹤年數 (Years)", dtick=1)
     )
+    st.plotly_chart(fig, width='stretch')
 
-    # 在這裡設定一個固定的寬度（例如 800px），確保字體變大時圖表不會縮小
-    st.plotly_chart(fig, use_container_width=False, width=800)
-    # --- 新增：在圖表下方橫向顯示存活率 ---
-    st.write("**預估 HCC-free 存活率：**")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # 下方橫向卡片文字同步修改
+    st.write("**預估 HCC 累積發生率：**")
+   
 
     # 建立三欄來橫向擺放
     m_col1, m_col2, m_col3 = st.columns(3)
     
-    def big_metric(label, value):
+    def big_metric(label, value, color):
         return f"""
         <div style="background-color: white; padding: 15px; border-radius: 10px; border: 1px solid #eee; text-align: center;">
             <p style="margin:0; font-size: 1rem; color: #666;">{label}</p>
-            <p style="margin:0; font-size: 2.2rem; font-weight: 800; color: #1f77b4;">{value:.1%}</p>
+            <p style="margin:0; font-size: 2.2rem; font-weight: 800; color: {color};">{value:.1%}</p>
         </div>
         """
 
     with m_col1:
-        st.markdown(big_metric("3年 HCC-free", key_probs[1]), unsafe_allow_html=True)
+        st.markdown(big_metric("3年累積發生率", key_risks[1], display_color), unsafe_allow_html=True)
     with m_col2:
-        st.markdown(big_metric("5年 HCC-free", key_probs[2]), unsafe_allow_html=True)
+        st.markdown(big_metric("5年累積發生率", key_risks[2], display_color), unsafe_allow_html=True)
     with m_col3:
-        st.markdown(big_metric("10年 HCC-free", key_probs[3]), unsafe_allow_html=True)
+        st.markdown(big_metric("10年累積發生率", key_risks[3], display_color), unsafe_allow_html=True)
 
 
 # --- 頁尾說明 ---
