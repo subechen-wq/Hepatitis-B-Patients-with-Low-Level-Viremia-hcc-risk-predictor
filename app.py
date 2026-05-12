@@ -106,7 +106,6 @@ ast_points = 13 if "異常" in ast else 0
 
 total_points = age_points + gender_points + cirrhosis_points + platelet_points + ast_points
 
-# 風險分層判定 (切點建議：80, 130 可依研究自行調整)
 if total_points < 90:
     risk_status = "低風險 (Low)"
     risk_color = "#28a745" # 綠色
@@ -165,7 +164,7 @@ with col_score:
     st.info(f"💡 **臨床建議**\n\n{risk_advice}")
 
 with col_chart:
-    st.subheader("📈 肝細胞癌 (HCC) 累積發生風險率")
+    st.subheader("📈 肝細胞癌 (HCC) 累積發生率")
     
     fig = go.Figure()
     # 發生率曲線
