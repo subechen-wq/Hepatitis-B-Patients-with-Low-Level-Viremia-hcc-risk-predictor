@@ -38,12 +38,9 @@ if check_password():
         **連結**：[點此查看論文原文](https://www.medsci.org/v21p1661.htm)
         """)
 
-    # ... (這裡接你原本的標題、側邊欄、計算邏輯與繪圖程式碼) ...
-    # 記得把之前的排版更新(大字體、橫向顯示)也放進來
-
     # --- 標題區 ---
 st.title("🧬 慢性B型肝炎低病毒血症患者發生肝細胞癌(HCC)風險評分系統")
-st.caption("本工具根據慢性B型肝炎低病毒血症患者(HBV DNA 檢測結果在 20 至 2000 IU/mL之間)研究建立，提供精確的風險評分與動態生存曲線預測。")
+st.caption("本工具根據慢性B型肝炎低病毒血症患者(HBV DNA 檢測結果在 20 至 2000 IU/mL之間)研究建立。")
 
 # --- 側邊欄：重新設計外觀 ---
 with st.sidebar:
@@ -69,7 +66,7 @@ ast_points = 13 if "異常" in ast else 0
 
 total_points = age_points + gender_points + cirrhosis_points + platelet_points + ast_points
 
-# 風險分層判定 (切點建議：80, 130 可依研究自行調整)
+# 風險分層判定
 if total_points < 90:
     risk_status = "低風險 (Low)"
     risk_color = "#28a745" # 綠色
@@ -83,7 +80,7 @@ else:
     risk_color = "#dc3545" # 紅色
     risk_advice = "強烈建議每 3 個月密切追蹤，並諮詢專科醫師考慮預防性治療。"
 
-# --- 計算生存曲線 ---
+# --- 計算HCC-free曲線 ---
 def get_curve(score):
     lp = 0.03166 * (score - 72.641166)
     exponent = math.exp(lp)
@@ -102,7 +99,7 @@ col_score, col_chart = st.columns([1, 2], gap="large")
 with col_score:
     st.subheader("📋 評估摘要")
     
-    # 1. 風險指示卡 (保留顏色分級)
+    # 1. 風險指示卡 
     st.markdown(f"""
         <div style="background-color:{risk_color}; padding:20px; border-radius:10px; color:white; margin-bottom:20px">
             <h4 style="margin:0">當前風險分層</h4>
@@ -117,7 +114,7 @@ with col_score:
     st.info(f"💡 **臨床建議**\n\n{risk_advice}")
 
 with col_chart:
-    st.subheader("📈 生存概率演變曲線")
+    st.subheader("📈 HCC-free發生率")
 
     # 使用 HTML/CSS 建立一個可橫向滑動的包裝層
     st.markdown('<div style="overflow-x: auto; white-space: nowrap;">', unsafe_allow_html=True)
@@ -137,7 +134,7 @@ with col_chart:
         mode='markers+text',
         text=[f"{key_probs[1]:.1%}", f"{key_probs[2]:.1%}", f"{key_probs[3]:.1%}"],
         textposition="top center",  # 改為正上方，減少右側被切掉的機率
-        textfont=dict(size=20),     # 即使字體很大
+        textfont=dict(size=20),     # 使字體很大
         marker=dict(color='black', size=10, symbol='diamond')
     ))
 
@@ -163,10 +160,10 @@ with col_chart:
     # 在這裡設定一個固定的寬度（例如 800px），確保字體變大時圖表不會縮小
     st.plotly_chart(fig, use_container_width=False, width=800)
     # --- 新增：在圖表下方橫向顯示存活率 ---
-    st.write("**預估 HCC-free 存活率：**")
+    st.write("**預估 HCC-free發生率：**")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 建立三欄來橫向擺放
+    # 下方建立三欄橫向顯示3,5,10年累積發生率
     m_col1, m_col2, m_col3 = st.columns(3)
     
     def big_metric(label, value):
@@ -178,11 +175,11 @@ with col_chart:
         """
 
     with m_col1:
-        st.markdown(big_metric("3年 HCC-free", key_probs[1]), unsafe_allow_html=True)
+        st.markdown(big_metric("3年HCC-free發生率", key_probs[1]), unsafe_allow_html=True)
     with m_col2:
-        st.markdown(big_metric("5年 HCC-free", key_probs[2]), unsafe_allow_html=True)
+        st.markdown(big_metric("5年HCC-free發生率", key_probs[2]), unsafe_allow_html=True)
     with m_col3:
-        st.markdown(big_metric("10年 HCC-free", key_probs[3]), unsafe_allow_html=True)
+        st.markdown(big_metric("10年HCC-free發生率", key_probs[3]), unsafe_allow_html=True)
 
 
 # --- 頁尾說明 ---
