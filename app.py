@@ -72,7 +72,7 @@ st.markdown("""
 
 # --- 標題區 ---
 st.title("🧬 慢性B型肝炎低病毒血症患者發生肝細胞癌(HCC)風險評分系統")
-st.caption("本工具根據慢性B型肝炎低病毒血症患者(HBV DNA 檢測結果在 20 至 2000 IU/mL之間)研究建立。")
+st.caption("本工具根據慢性B型肝炎低病毒血症患者(HBV DNA 檢測結果在 20 至 2000 IU/mL之間研究建立。")
 
 # --- 側邊欄：重新設計外觀 ---
 with st.sidebar:
