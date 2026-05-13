@@ -9,7 +9,7 @@ import streamlit as st
 def check_password():
     """如果密碼正確則傳回 True，否則顯示輸入框。"""
     def password_entered():
-        if st.session_state["password"] == "hcc2026": # 你可以修改你的密碼
+        if st.session_state["password"] == "hcc2026": # 這裡可以改成你要的密碼
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # 不要儲存密碼
         else:
@@ -29,10 +29,9 @@ def check_password():
 
 if not check_password():
     st.stop()  # 密碼不正確就停止執行後續程式碼
+    
 
-# --- 後續才是你原本的網頁內容 (st.title, st.sidebar 等) ---
-
-# 1. 頁面配置：讓介面寬一點，看起來不擁擠
+# 頁面配置：讓介面寬一點，看起來不擁擠
 st.set_page_config(
     page_title="HCC Risk Explorer", 
     page_icon="🩺", 
@@ -40,7 +39,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 1. 頁面配置後立即加入法律聲明 ---
+# --- 頁面配置後立即加入法律聲明 ---
 st.error("⚠️ **學術研究專用聲明**：本工具僅供合作醫師及研究人員作為學術參考，**嚴禁**直接用於臨床診斷或醫療決策。使用前請務必核對原始研究論文。")
 
 with st.expander("原始研究與模型來源"):
@@ -90,7 +89,7 @@ with st.sidebar:
     
     platelet = st.selectbox("血小板計數 (Platelet)", 
                             options=["正常 (150~400)", "異常 (<150 or >400)"],
-                            help="單位為 10^3/μL。血小板低下通常與肝硬化或門脈高壓相關。")
+                            help="單位為 10^3/μL。")
     
     ast = st.selectbox("AST 數值 (GOT)", 
                        options=["正常 (5~34)", "異常 (Abnormal)"],
@@ -128,7 +127,7 @@ def get_curve(score):
     lp = 0.03166 * (score - 72.641166)
     exponent = math.exp(lp)
     times = [0, 3, 5, 10]
-    # 這是原始的存活率基底 S0(t)
+    # 原始的存活率基底 S0(t)
     base_survival = [1.0, 0.9741862491, 0.963424793, 0.9205781806]
     
     # 計算各點的累積發生率 (1 - Survival)
@@ -174,7 +173,7 @@ with col_chart:
         name='Cumulative Incidence'
     ))
     
-    # 修改關鍵點標籤
+    # 關鍵點標籤
     fig.add_trace(go.Scatter(
         x=[3, 5, 10], y=[key_risks[1], key_risks[2], key_risks[3]],
         mode='markers+text',
@@ -190,11 +189,9 @@ with col_chart:
     )
     st.plotly_chart(fig, width='stretch')
 
-    # 下方橫向卡片文字同步修改
     st.write("**預估 HCC 累積發生率：**")
-   
 
-    # 建立三欄來橫向擺放
+    # 下方建立三欄橫向顯示3,5,10年累積發生率
     m_col1, m_col2, m_col3 = st.columns(3)
     
     def big_metric(label, value, color):
