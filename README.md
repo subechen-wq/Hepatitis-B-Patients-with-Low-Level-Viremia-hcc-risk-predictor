@@ -1,6 +1,6 @@
 # 🧬 Hepatitis B HCC Risk Predictor (LLV Population)
 
-[![Streamlit App](https://hcc-risk-predictor-laaavtlojk9bfhctqywxgm.streamlit.app/) [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=flat&logo=streamlit&logoColor=white)](https://hcc-risk-predictor-laaavtlojk9bfhctqywxgm.streamlit.app/) [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 本專案是一款基於臨床實證醫學研究開發的**肝細胞癌 (HCC) 累積發生風險評估工具**。專為**慢性B型肝炎低病毒血症 (Low-Level Viremia, LLV)** 患者（定義為 HBV DNA 介於 20 至 2000 IU/mL 之間）所設計。
